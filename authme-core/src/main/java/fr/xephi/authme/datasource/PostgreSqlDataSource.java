@@ -231,6 +231,8 @@ public class PostgreSqlDataSource extends AbstractSqlDataSource {
                     + col.EMAIL + " VARCHAR(255);");
             }
 
+            EmailNormalizationMigration.migrate(con, tableName, col);
+
             if (isColumnMissing(md, col.IS_LOGGED)) {
                 st.executeUpdate("ALTER TABLE " + tableName + " ADD COLUMN "
                     + col.IS_LOGGED + " SMALLINT NOT NULL DEFAULT '0';");

@@ -134,6 +134,26 @@ public abstract class AbstractDataSourceIntegrationTest {
     }
 
     @Test
+    void shouldPreserveDeliveryEmailAndCountProviderAliases() {
+        DataSource dataSource = getDataSource();
+        String gmail = "Player.Name+game@GOOGLEMAIL.COM";
+        PlayerAuth auth = PlayerAuth.builder().name("alias-player").email(gmail).build();
+
+        assertThat(dataSource.saveAuth(auth), equalTo(true));
+        assertThat(dataSource.getEmail(auth.getNickname()).getValue(), equalTo(gmail));
+        assertThat(dataSource.countAuthsByEmail("playername@gmail.com"), equalTo(1));
+        assertThat(dataSource.countAuthsByEmail("Player.Name+other@googlemail.com"), equalTo(1));
+
+        String outlook = "Other.Name+game@OUTLOOK.COM";
+        auth.setEmail(outlook);
+        assertThat(dataSource.updateEmail(auth), equalTo(true));
+        assertThat(dataSource.getEmail(auth.getNickname()).getValue(), equalTo(outlook));
+        assertThat(dataSource.countAuthsByEmail(gmail), equalTo(0));
+        assertThat(dataSource.countAuthsByEmail("other.name+other@outlook.com"), equalTo(1));
+        assertThat(dataSource.countAuthsByEmail("othername@outlook.com"), equalTo(0));
+    }
+
+    @Test
     void shouldReturnAllAuths() {
         // given
         DataSource dataSource = getDataSource();

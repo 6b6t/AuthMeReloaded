@@ -8,6 +8,7 @@ import fr.xephi.authme.data.auth.PlayerAuth;
 import fr.xephi.authme.datasource.columnshandler.AuthMeColumns;
 import fr.xephi.authme.datasource.columnshandler.AuthMeColumnsHandler;
 import fr.xephi.authme.security.crypts.HashedPassword;
+import fr.xephi.authme.util.EmailAddressNormalizer;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -53,7 +54,8 @@ public abstract class AbstractSqlDataSource implements DataSource {
     public boolean saveAuth(PlayerAuth auth) {
         return columnsHandler.insert(auth,
             AuthMeColumns.NAME, AuthMeColumns.NICK_NAME, AuthMeColumns.PASSWORD, AuthMeColumns.SALT,
-            AuthMeColumns.EMAIL, AuthMeColumns.REGISTRATION_DATE, AuthMeColumns.REGISTRATION_IP,
+            AuthMeColumns.EMAIL, AuthMeColumns.NORMALIZED_EMAIL, AuthMeColumns.REGISTRATION_DATE,
+            AuthMeColumns.REGISTRATION_IP,
             AuthMeColumns.UUID);
     }
 
@@ -104,12 +106,14 @@ public abstract class AbstractSqlDataSource implements DataSource {
 
     @Override
     public int countAuthsByEmail(String email) {
-        return columnsHandler.count(eqIgnoreCase(AuthMeColumns.EMAIL, email));
+        return EmailAddressNormalizer.normalize(email)
+            .map(normalized -> columnsHandler.count(eq(AuthMeColumns.NORMALIZED_EMAIL, normalized)))
+            .orElseGet(() -> columnsHandler.count(eqIgnoreCase(AuthMeColumns.EMAIL, email)));
     }
 
     @Override
     public boolean updateEmail(PlayerAuth auth) {
-        return columnsHandler.update(auth, AuthMeColumns.EMAIL);
+        return columnsHandler.update(auth, AuthMeColumns.EMAIL, AuthMeColumns.NORMALIZED_EMAIL);
     }
 
     @Override

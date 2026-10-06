@@ -174,6 +174,8 @@ public class SQLite extends AbstractSqlDataSource {
                     + " ADD COLUMN " + col.EMAIL + " VARCHAR(255);");
             }
 
+            EmailNormalizationMigration.migrate(con, tableName, col);
+
             if (isColumnMissing(md, col.IS_LOGGED)) {
                 st.executeUpdate("ALTER TABLE " + tableName
                     + " ADD COLUMN " + col.IS_LOGGED + " INT NOT NULL DEFAULT '0';");

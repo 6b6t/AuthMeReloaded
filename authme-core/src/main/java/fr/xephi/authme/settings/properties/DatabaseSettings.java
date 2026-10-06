@@ -82,6 +82,11 @@ public final class DatabaseSettings implements SettingsHolder {
     public static final Property<String> MYSQL_COL_EMAIL =
         newProperty("DataSource.mySQLColumnEmail", "email");
 
+    @Comment({"Column for canonical email values used to enforce account limits",
+        "Delivery addresses remain unchanged"})
+    public static final Property<String> MYSQL_COL_NORMALIZED_EMAIL =
+        newProperty("DataSource.mySQLColumnNormalizedEmail", "normalizedEmail");
+
     @Comment("Column for storing if a player is logged in or not")
     public static final Property<String> MYSQL_COL_ISLOGGED =
         newProperty("DataSource.mySQLColumnLogged", "isLogged");

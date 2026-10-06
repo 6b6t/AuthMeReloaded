@@ -16,6 +16,7 @@ import fr.xephi.authme.settings.properties.EmailSettings;
 import fr.xephi.authme.settings.properties.ProtectionSettings;
 import fr.xephi.authme.settings.properties.RestrictionSettings;
 import fr.xephi.authme.settings.properties.SecuritySettings;
+import fr.xephi.authme.util.EmailAddressNormalizer;
 import fr.xephi.authme.util.EmailAddressValidator;
 import fr.xephi.authme.util.Utils;
 import org.bukkit.command.CommandSender;
@@ -134,7 +135,8 @@ public class ValidationService implements Reloadable {
      * @return true if the email is valid, false otherwise
      */
     public boolean validateEmail(String email) {
-        if (Utils.isEmailEmpty(email) || !EmailAddressValidator.isValid(email)) {
+        if (Utils.isEmailEmpty(email) || !EmailAddressValidator.isValid(email)
+            || EmailAddressNormalizer.normalize(email).isEmpty()) {
             return false;
         }
         final String emailDomain = email.substring(email.indexOf('@') + 1).toLowerCase(Locale.ROOT);

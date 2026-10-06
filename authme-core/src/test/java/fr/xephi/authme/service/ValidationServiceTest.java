@@ -257,6 +257,12 @@ public class ValidationServiceTest {
     }
 
     @Test
+    public void shouldRejectEmailWithoutCanonicalMailbox() {
+        assertThat(validationService.validateEmail("+game@gmail.com"), equalTo(false));
+        assertThat(validationService.validateEmail("-game@yahoo.com"), equalTo(false));
+    }
+
+    @Test
     public void shouldRejectDefaultEmail() {
         // given/when/then
         assertThat(validationService.validateEmail("your@email.com"), equalTo(false));
