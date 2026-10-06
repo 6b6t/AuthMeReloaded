@@ -192,7 +192,7 @@ public class ValidationServiceTest {
     public void shouldAcceptEmailWithWhitelist() {
         // given
         given(settings.getProperty(EmailSettings.DOMAIN_WHITELIST))
-            .willReturn(asList("domain.tld", "example.com"));
+            .willReturn(asList("domain.org", "example.com"));
         given(settings.getProperty(EmailSettings.DOMAIN_BLACKLIST)).willReturn(Collections.emptyList());
 
         // when
@@ -206,11 +206,11 @@ public class ValidationServiceTest {
     public void shouldRejectEmailNotInWhitelist() {
         // given
         given(settings.getProperty(EmailSettings.DOMAIN_WHITELIST))
-            .willReturn(asList("domain.tld", "example.com"));
+            .willReturn(asList("domain.org", "example.com"));
         given(settings.getProperty(EmailSettings.DOMAIN_BLACKLIST)).willReturn(Collections.emptyList());
 
         // when
-        boolean result = validationService.validateEmail("email@other-domain.abc");
+        boolean result = validationService.validateEmail("email@other-domain.com");
 
         // then
         assertThat(result, equalTo(false));
@@ -221,10 +221,10 @@ public class ValidationServiceTest {
         // given
         given(settings.getProperty(EmailSettings.DOMAIN_WHITELIST)).willReturn(Collections.emptyList());
         given(settings.getProperty(EmailSettings.DOMAIN_BLACKLIST))
-            .willReturn(asList("Example.org", "a-test-name.tld"));
+            .willReturn(asList("Example.org", "a-test-name.com"));
 
         // when
-        boolean result = validationService.validateEmail("sample@valid-name.tld");
+        boolean result = validationService.validateEmail("sample@valid-name.com");
 
         // then
         assertThat(result, equalTo(true));
@@ -235,10 +235,10 @@ public class ValidationServiceTest {
         // given
         given(settings.getProperty(EmailSettings.DOMAIN_WHITELIST)).willReturn(Collections.emptyList());
         given(settings.getProperty(EmailSettings.DOMAIN_BLACKLIST))
-            .willReturn(asList("Example.org", "a-test-name.tld"));
+            .willReturn(asList("Example.org", "a-test-name.com"));
 
         // when
-        boolean result = validationService.validateEmail("sample@a-Test-name.tld");
+        boolean result = validationService.validateEmail("sample@a-Test-name.com");
 
         // then
         assertThat(result, equalTo(false));
