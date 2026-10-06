@@ -71,6 +71,11 @@ public final class EmailAddressNormalizer {
         return local.isEmpty() ? Optional.empty() : Optional.of(local + "@" + domain);
     }
 
+    public static boolean isSameMailbox(String firstEmail, String secondEmail) {
+        Optional<String> first = normalize(firstEmail);
+        return first.isPresent() && first.equals(normalize(secondEmail));
+    }
+
     private static String removeSubaddress(String local, char delimiter) {
         int subaddress = local.indexOf(delimiter);
         return subaddress < 0 ? local : local.substring(0, subaddress);

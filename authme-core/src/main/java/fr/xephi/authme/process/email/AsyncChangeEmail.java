@@ -11,6 +11,7 @@ import fr.xephi.authme.process.AsynchronousProcess;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.service.CommonService;
 import fr.xephi.authme.service.ValidationService;
+import fr.xephi.authme.util.EmailAddressNormalizer;
 import org.bukkit.entity.Player;
 
 import javax.inject.Inject;
@@ -60,7 +61,8 @@ public class AsyncChangeEmail implements AsynchronousProcess {
                 service.send(player, MessageKey.INVALID_NEW_EMAIL);
             } else if (!oldEmail.equalsIgnoreCase(currentEmail)) {
                 service.send(player, MessageKey.INVALID_OLD_EMAIL);
-            } else if (!validationService.isEmailFreeForRegistration(newEmail, player)) {
+            } else if (!EmailAddressNormalizer.isSameMailbox(currentEmail, newEmail)
+                && !validationService.isEmailFreeForRegistration(newEmail, player)) {
                 service.send(player, MessageKey.EMAIL_ALREADY_USED_ERROR);
             } else {
                 saveNewEmail(auth, player, oldEmail, newEmail);

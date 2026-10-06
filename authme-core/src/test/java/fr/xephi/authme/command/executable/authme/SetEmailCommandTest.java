@@ -107,7 +107,28 @@ class SetEmailCommandTest {
         verify(validationService).isEmailFreeForRegistration(email, sender);
         verify(commandService).send(sender, MessageKey.EMAIL_ALREADY_USED_ERROR);
         verifyNoMoreInteractions(dataSource);
-        verifyNoInteractions(auth);
+        verify(auth).getEmail();
+        verifyNoMoreInteractions(auth);
+    }
+
+    @Test
+    void shouldAllowSettingAliasWithoutAddingAnotherAccountToMailbox() {
+        String user = "Bobby";
+        String email = "playername+new@gmail.com";
+        PlayerAuth auth = mock(PlayerAuth.class);
+        CommandSender sender = mock(CommandSender.class);
+        given(auth.getEmail()).willReturn("Player.Name+old@googlemail.com");
+        given(dataSource.getAuth(user)).willReturn(auth);
+        given(validationService.validateEmail(email)).willReturn(true);
+        given(dataSource.updateEmail(auth)).willReturn(true);
+        setBukkitServiceToRunTaskOptionallyAsync(bukkitService);
+
+        command.executeCommand(sender, Arrays.asList(user, email));
+
+        verify(validationService, never()).isEmailFreeForRegistration(any(), any());
+        verify(auth).setEmail(email);
+        verify(dataSource).updateEmail(auth);
+        verify(commandService).send(sender, MessageKey.EMAIL_CHANGED_SUCCESS);
     }
 
     @Test

@@ -8,6 +8,7 @@ import fr.xephi.authme.message.MessageKey;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.service.CommonService;
 import fr.xephi.authme.service.ValidationService;
+import fr.xephi.authme.util.EmailAddressNormalizer;
 import org.bukkit.command.CommandSender;
 
 import javax.inject.Inject;
@@ -53,7 +54,8 @@ public class SetEmailCommand implements ExecutableCommand {
                 if (auth == null) {
                     commonService.send(sender, MessageKey.UNKNOWN_USER);
                     return;
-                } else if (!validationService.isEmailFreeForRegistration(playerEmail, sender)) {
+                } else if (!EmailAddressNormalizer.isSameMailbox(auth.getEmail(), playerEmail)
+                    && !validationService.isEmailFreeForRegistration(playerEmail, sender)) {
                     commonService.send(sender, MessageKey.EMAIL_ALREADY_USED_ERROR);
                     return;
                 }

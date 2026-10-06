@@ -114,6 +114,28 @@ public class AsyncChangeEmailTest {
     }
 
     @Test
+    public void shouldAllowChangingAliasWithoutAddingAnotherAccountToMailbox() {
+        String oldEmail = "Player.Name+old@googlemail.com";
+        String newEmail = "playername+new@gmail.com";
+        given(player.getName()).willReturn("Bobby");
+        given(playerCache.isAuthenticated("bobby")).willReturn(true);
+        PlayerAuth auth = authWithMail(oldEmail);
+        given(playerCache.getAuth("bobby")).willReturn(auth);
+        given(validationService.validateEmail(newEmail)).willReturn(true);
+        given(dataSource.updateEmail(auth)).willReturn(true);
+        given(bukkitService.createAndCallEvent(any(Function.class)))
+            .willReturn(new EmailChangedEvent(player, oldEmail, newEmail, false));
+
+        process.changeEmail(player, oldEmail, newEmail);
+
+        verify(validationService, never()).isEmailFreeForRegistration(any(), any());
+        verify(auth).setEmail(newEmail);
+        verify(dataSource).updateEmail(auth);
+        verify(playerCache).updatePlayer(auth);
+        verify(service).send(player, MessageKey.EMAIL_CHANGED_SUCCESS);
+    }
+
+    @Test
     public void shouldShowErrorIfSaveFails() {
         // given
         String newEmail = "new@mail.tld";
