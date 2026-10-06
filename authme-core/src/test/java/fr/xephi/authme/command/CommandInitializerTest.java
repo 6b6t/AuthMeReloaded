@@ -1,5 +1,6 @@
 package fr.xephi.authme.command;
 
+import fr.xephi.authme.command.executable.register.RegisterCommand;
 import fr.xephi.authme.util.StringUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import java.util.regex.Pattern;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -49,6 +51,24 @@ class CommandInitializerTest {
         assertThat(commandsIncludeLabel(commands, "authme"), equalTo(true));
         assertThat(commandsIncludeLabel(commands, "register"), equalTo(true));
         assertThat(commandsIncludeLabel(commands, "help"), equalTo(false));
+    }
+
+    @Test
+    void shouldRouteEmailRegistrationWithConfirmation() {
+        CommandMapper mapper = new CommandMapper(new CommandInitializer(), null);
+        List<String> arguments = List.of("player@example.org", "player@example.org");
+        List<String> parts = new ArrayList<>(List.of("register"));
+        parts.addAll(arguments);
+
+        FoundCommandResult result = mapper.mapPartsToCommand(null, parts);
+
+        assertThat(result.getResultStatus(), equalTo(FoundResultStatus.SUCCESS));
+        assertThat(result.getCommandDescription().getExecutableCommand(), equalTo(RegisterCommand.class));
+        assertThat(result.getArguments(), equalTo(arguments));
+
+        parts.add(arguments.get(0));
+        assertThat(mapper.mapPartsToCommand(null, parts).getResultStatus(),
+            not(equalTo(FoundResultStatus.SUCCESS)));
     }
 
     @Test
