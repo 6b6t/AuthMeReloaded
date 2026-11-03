@@ -65,6 +65,21 @@ You can also create your own translation file and, if you want, you can share it
 
 #### Configuration
 [How to configure AuthMe](https://github.com/AuthMe/AuthMeReloaded/blob/master/docs/config.md)
+
+Email registrations use rolling 24-hour limits under `Email.registrationLimits`.
+The limits default to 10 admitted registrations per untrusted domain and 30 across all untrusted domains.
+Subdomains share the limit of their registrable parent, such as `example.co.uk`.
+The `trustedDomains` list exempts exact email domains from these limits. Add custom domains there when needed.
+Existing disposable-domain checks and per-email and per-IP account limits still apply.
+
+Set `enabled` to `false` to disable the feature, or set either numeric limit to `0` to disable that limit.
+Each admitted attempt consumes a slot before account storage or email delivery, including attempts that later fail.
+The counters start empty when first enabled and survive restarts and configuration reloads.
+AuthMe stores only domains and timestamps in `plugins/AuthMe/email-registration-limits.tsv`.
+Keep that file and its `.lock` file in the persistent data directory. Separate data directories have separate counters.
+If AuthMe cannot read or save the counters, it rejects registrations from untrusted domains until storage works again.
+These limits apply to player registrations with email addresses. They do not limit existing-account recovery or email changes.
+
 #### Commands
 [Command list and usage](https://github.com/AuthMe/AuthMeReloaded/blob/master/docs/commands.md)
 #### Permissions

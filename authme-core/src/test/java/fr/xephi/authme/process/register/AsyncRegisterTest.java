@@ -11,6 +11,7 @@ import fr.xephi.authme.data.auth.PlayerCache;
 import fr.xephi.authme.datasource.DataSource;
 import fr.xephi.authme.events.AuthMeAsyncPreRegisterEvent;
 import fr.xephi.authme.message.MessageKey;
+import fr.xephi.authme.process.register.executors.EmailRegisterParams;
 import fr.xephi.authme.process.register.executors.PasswordRegisterParams;
 import fr.xephi.authme.process.register.executors.RegistrationExecutor;
 import fr.xephi.authme.process.register.executors.RegistrationMethod;
@@ -56,6 +57,8 @@ public class AsyncRegisterTest {
     private DataSource dataSource;
     @Mock
     private ValidationService validationService;
+    @Mock
+    private EmailRegistrationLimiter emailRegistrationLimiter;
     @Mock
     private SingletonStore<RegistrationExecutor> registrationExecutorStore;
 
@@ -181,12 +184,48 @@ public class AsyncRegisterTest {
         PlayerAuth auth = mock(PlayerAuth.class);
         given(executor.buildPlayerAuth(params)).willReturn(auth);
         given(dataSource.saveAuth(auth)).willReturn(true);
+        given(emailRegistrationLimiter.tryAcquire(null)).willReturn(EmailRegistrationLimiter.Admission.ALLOWED);
 
         // when
         asyncRegister.register(RegistrationMethod.PASSWORD_REGISTRATION, params);
 
         // then
         verify(executor).executePostPersistAction(params);
+    }
+
+    @Test
+    void shouldRejectBeforeSavingAccountOrSendingMailWhenDailyLimitIsReached() {
+        verifyRejectedEmailRegistration(EmailRegistrationLimiter.Admission.LIMIT_REACHED,
+            MessageKey.EMAIL_REGISTRATION_LIMIT);
+    }
+
+    @Test
+    void shouldRejectBeforeSavingAccountOrSendingMailWhenCountersAreUnavailable() {
+        verifyRejectedEmailRegistration(EmailRegistrationLimiter.Admission.UNAVAILABLE,
+            MessageKey.EMAIL_REGISTRATION_UNAVAILABLE);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void verifyRejectedEmailRegistration(EmailRegistrationLimiter.Admission admission, MessageKey message) {
+        Player player = mockPlayerWithName("player");
+        TestHelper.mockIpAddressToPlayer(player, "33.44.55.66");
+        given(commonService.getProperty(RegistrationSettings.IS_ENABLED)).willReturn(true);
+        given(commonService.getProperty(RestrictionSettings.MAX_REGISTRATION_PER_IP)).willReturn(0);
+        given(bukkitService.createAndCallEvent(any(Function.class)))
+            .willReturn(new AuthMeAsyncPreRegisterEvent(player, true));
+        RegistrationExecutor executor = mock(RegistrationExecutor.class);
+        EmailRegisterParams params = EmailRegisterParams.of(player, "player@example.com");
+        given(executor.isRegistrationAdmitted(params)).willReturn(true);
+        singletonStoreWillReturn(registrationExecutorStore, executor);
+        PlayerAuth auth = PlayerAuth.builder().name("player").email("player@example.com").build();
+        given(executor.buildPlayerAuth(params)).willReturn(auth);
+        given(emailRegistrationLimiter.tryAcquire("player@example.com")).willReturn(admission);
+
+        asyncRegister.register(RegistrationMethod.EMAIL_REGISTRATION, params);
+
+        verify(commonService).send(player, message);
+        verify(dataSource, never()).saveAuth(any());
+        verify(executor, never()).executePostPersistAction(any());
     }
 
     @Test

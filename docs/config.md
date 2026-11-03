@@ -408,6 +408,56 @@ Email:
     - 10minutemail.com
     # Whitelist ONLY these domains for emails
     emailWhitelisted: []
+    registrationLimits:
+        # Limit new registrations from email domains outside trustedDomains over a rolling 24 hours.
+        # Counters persist in the AuthMe data folder. Separate data folders have separate limits.
+        # Existing email validation, account limits and recovery rules still apply.
+        enabled: true
+        # Exact email domains exempt from these daily limits. Subdomains are not exempt.
+        # This list does not prove that an account is safe or override disposable-domain checks.
+        # Add a work, school or custom domain here to exempt it. Wildcards are not supported.
+        trustedDomains:
+        - gmail.com
+        - googlemail.com
+        - outlook.com
+        - hotmail.com
+        - live.com
+        - msn.com
+        - yahoo.com
+        - yahoo.co.uk
+        - yahoo.de
+        - yahoo.fr
+        - yahoo.ca
+        - yahoo.co.jp
+        - ymail.com
+        - rocketmail.com
+        - icloud.com
+        - me.com
+        - mac.com
+        - proton.me
+        - protonmail.com
+        - pm.me
+        - aol.com
+        - gmx.com
+        - gmx.de
+        - gmx.net
+        - web.de
+        - fastmail.com
+        - mail.com
+        - yandex.com
+        - yandex.ru
+        - ya.ru
+        - qq.com
+        - 163.com
+        # Maximum admitted registrations per untrusted domain in 24 hours.
+        # Set to 0 to disable this limit.
+        # Subdomains share the limit of their registrable parent domain.
+        # Each admitted attempt consumes a slot, even if account storage or email delivery fails.
+        maxPerDomain: 10
+        # Maximum admitted registrations across all untrusted domains in 24 hours.
+        # This limit prevents domain rotation from exhausting the email quota.
+        # Set to 0 to disable this limit.
+        maxUntrustedTotal: 30
     # Send the new password drawn in an image?
     generateImage: false
     # The OAuth2 token
