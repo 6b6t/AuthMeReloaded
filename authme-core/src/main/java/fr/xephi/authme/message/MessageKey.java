@@ -5,6 +5,90 @@ package fr.xephi.authme.message;
  */
 public enum MessageKey {
 
+    /** Sign in */
+    DIALOG_LOGIN_TITLE("dialog.login_title"),
+
+    /** Create your account */
+    DIALOG_REGISTER_TITLE("dialog.register_title"),
+
+    /** Security check */
+    DIALOG_CAPTCHA_TITLE("dialog.captcha_title"),
+
+    /** Two-factor authentication */
+    DIALOG_TOTP_TITLE("dialog.totp_title"),
+
+    /** Recover your account */
+    DIALOG_RECOVERY_TITLE("dialog.recovery_title"),
+
+    /** Verify your recovery code */
+    DIALOG_RECOVERY_CODE_TITLE("dialog.recovery_code_title"),
+
+    /** Choose a new password */
+    DIALOG_RESET_TITLE("dialog.reset_title"),
+
+    /** Enter your password to continue. You can also use /login in chat. */
+    DIALOG_LOGIN_DESCRIPTION("dialog.login_description"),
+
+    /** Create your account to continue. Follow any setup instructions in chat. */
+    DIALOG_REGISTER_DESCRIPTION("dialog.register_description"),
+
+    /** Enter your email address. We will send your account password there. */
+    DIALOG_EMAIL_REGISTER_DESCRIPTION("dialog.email_register_description"),
+
+    /** Enter the security code below. */
+    DIALOG_CAPTCHA_DESCRIPTION("dialog.captcha_description"),
+
+    /** Enter a code from your authenticator app. */
+    DIALOG_TOTP_DESCRIPTION("dialog.totp_description"),
+
+    /** Enter the email address linked to this account. */
+    DIALOG_RECOVERY_DESCRIPTION("dialog.recovery_description"),
+
+    /** Enter the recovery code sent to your email. */
+    DIALOG_RECOVERY_CODE_DESCRIPTION("dialog.recovery_code_description"),
+
+    /** Choose a new password for your account. */
+    DIALOG_RESET_DESCRIPTION("dialog.reset_description"),
+
+    /** Password */
+    DIALOG_PASSWORD("dialog.password"),
+
+    /** Confirm password */
+    DIALOG_CONFIRM_PASSWORD("dialog.confirm_password"),
+
+    /** Email address */
+    DIALOG_EMAIL("dialog.email"),
+
+    /** Confirm email address */
+    DIALOG_CONFIRM_EMAIL("dialog.confirm_email"),
+
+    /** Email address (optional) */
+    DIALOG_OPTIONAL_EMAIL("dialog.optional_email"),
+
+    /** Code */
+    DIALOG_CODE("dialog.code"),
+
+    /** Sign in */
+    DIALOG_LOGIN_BUTTON("dialog.login_button"),
+
+    /** Create account */
+    DIALOG_REGISTER_BUTTON("dialog.register_button"),
+
+    /** Verify code */
+    DIALOG_VERIFY_BUTTON("dialog.verify_button"),
+
+    /** Recover account */
+    DIALOG_RECOVERY_BUTTON("dialog.recovery_button"),
+
+    /** Save password */
+    DIALOG_RESET_BUTTON("dialog.reset_button"),
+
+    /** Back to sign in */
+    DIALOG_BACK_BUTTON("dialog.back_button"),
+
+    /** Use chat */
+    DIALOG_CHAT_BUTTON("dialog.chat_button"),
+
     /** In order to use this command you must be authenticated! */
     DENIED_COMMAND("error.denied_command"),
 

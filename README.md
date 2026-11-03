@@ -80,6 +80,15 @@ Keep that file and its `.lock` file in the persistent data directory. Separate d
 If AuthMe cannot read or save the counters, it rejects registrations from untrusted domains until storage works again.
 These limits apply to player registrations with email addresses. They do not limit existing-account recovery or email changes.
 
+Paper/Folia dialogs use the existing `settings.registration.useDialogUi` option, which defaults to `true`.
+They open after the player joins and cover login, registration, captcha, two-factor codes, and email recovery.
+Every submission runs the normal auth command with the existing security checks and registration limits.
+Players can select **Use chat** to continue with commands. Dialog text uses `settings.messagesLanguage`.
+When `settings.perPlayerLocale` is enabled (the default), AuthMe uses the player's locale and falls back to that configured language.
+New dialog keys include English defaults.
+You can edit the `dialog` section in the messages files. The database and proxy integration stay unchanged.
+Spigot keeps its existing login and registration dialogs.
+
 #### Commands
 [Command list and usage](https://github.com/AuthMe/AuthMeReloaded/blob/master/docs/commands.md)
 #### Permissions

@@ -3,6 +3,7 @@ package fr.xephi.authme.platform;
 import fr.xephi.authme.AuthMe;
 import fr.xephi.authme.command.CommandDescription;
 import fr.xephi.authme.command.CommandHandler;
+import fr.xephi.authme.message.MessageKey;
 import fr.xephi.authme.process.register.RegisterSecondaryArgument;
 import fr.xephi.authme.process.register.RegistrationType;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -18,6 +19,13 @@ import java.util.Collection;
 public abstract class AbstractPaperPlatformAdapter extends AbstractSpigotPlatformAdapter {
 
     private static final boolean DIALOG_AVAILABLE = hasDialogApi();
+
+    private PaperDialogController dialogs;
+
+    /** Connects the injected listener to this adapter, which ServiceLoader creates outside the injector. */
+    void setDialogController(PaperDialogController controller) {
+        this.dialogs = controller;
+    }
 
     @Override
     public void teleportPlayer(Player player, Location location) {
@@ -41,12 +49,23 @@ public abstract class AbstractPaperPlatformAdapter extends AbstractSpigotPlatfor
 
     @Override
     public void showLoginDialog(Player player) {
-        PaperDialogHelper.showLoginDialog(player);
+        if (DIALOG_AVAILABLE && dialogs != null) {
+            dialogs.showLogin(player);
+        }
     }
 
     @Override
     public void showRegisterDialog(Player player, RegistrationType type, RegisterSecondaryArgument secondArg) {
-        PaperDialogHelper.showRegisterDialog(player, type, secondArg);
+        if (DIALOG_AVAILABLE && dialogs != null) {
+            dialogs.showRegister(player, type, secondArg);
+        }
+    }
+
+    @Override
+    public void onAuthMessage(Player player, MessageKey key, String message) {
+        if (DIALOG_AVAILABLE && dialogs != null) {
+            dialogs.onMessage(player, key, message);
+        }
     }
 
     @Override

@@ -320,9 +320,9 @@ settings:
         forceKickAfterRegister: false
         # Does AuthMe need to enforce a /login after a successful registration?
         forceLoginAfterRegister: false
-        # Show a graphical dialog UI for login/register instead of chat messages.
-        # Requires Minecraft 1.21.6+ on Spigot, or 1.21.11+ on Paper.
-        # On older server versions, this option is automatically ignored.
+        # Show dialogs after joining for login/register. Chat commands remain available.
+        # Paper/Folia also show captcha, two-factor and email recovery prompts.
+        # Requires Minecraft 1.21.6+ on Spigot, or 1.21.11+ on Paper/Folia.
         useDialogUi: true
     # Enable to display the welcome message (welcome.txt) after a login
     # You can use colors in this welcome.txt + some replaced strings:
