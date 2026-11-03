@@ -84,6 +84,7 @@ class MessagesIntegrationTest {
         ConsoleLogger.initialize(null, null);
     }
 
+    /** Preserves every chat line while forwarding the same translated feedback to the dialog. */
     @Test
     void shouldKeepChatFeedbackWhileUpdatingTheDialog() {
         Player player = mock(Player.class);
@@ -101,6 +102,7 @@ class MessagesIntegrationTest {
         verify(adapter).onAuthMessage(player, MessageKey.UNKNOWN_USER, translated);
     }
 
+    /** Keeps chat usable even when the optional dialog callback throws. */
     @Test
     void shouldKeepChatFeedbackWhenDialogUpdatesFail() {
         TestHelper.setupLogger();

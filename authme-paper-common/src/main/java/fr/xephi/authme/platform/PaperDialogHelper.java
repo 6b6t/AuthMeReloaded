@@ -11,7 +11,7 @@ import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 
-import java.time.Duration;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 /** Renders post-join forms without validating credentials or granting authentication. */
@@ -22,7 +22,7 @@ final class PaperDialogHelper {
     private PaperDialogHelper() {
     }
 
-    /** Shows a form with short-lived, single-use callbacks bound to its current window. */
+    /** Shows a form with single-use navigation bound to its current window. */
     static void show(Player player, PostJoinDialog form, NavigationHandler submit) {
         List<DialogInput> inputs = form.fields().stream()
             .map(field -> (DialogInput) DialogInput.text(field.key(), TEXT.deserialize(field.label()))
@@ -42,17 +42,19 @@ final class PaperDialogHelper {
             .type(DialogType.multiAction(buttons).columns(1).exitAction(button(player, form, exit, submit)).build())));
     }
 
+    /** Uses native actions for credentials and weakly bound callbacks for navigation only. */
     private static ActionButton button(Player player, PostJoinDialog form, PostJoinDialog.Button button,
                                        NavigationHandler navigate) {
         DialogAction action;
         if (button.target() == null) {
             action = DialogAction.commandTemplate(commandTemplate(form, button));
         } else {
+            WeakReference<Player> owner = new WeakReference<>(player);
             action = DialogAction.customClick((view, audience) -> {
-                if (audience instanceof Player actor && actor == player) {
+                if (audience instanceof Player actor && actor == owner.get()) {
                     navigate.accept(actor, button);
                 }
-            }, ClickCallback.Options.builder().uses(1).lifetime(Duration.ofMinutes(2)).build());
+            }, ClickCallback.Options.builder().uses(1).build());
         }
         return ActionButton.builder(TEXT.deserialize(button.label())).action(action).build();
     }

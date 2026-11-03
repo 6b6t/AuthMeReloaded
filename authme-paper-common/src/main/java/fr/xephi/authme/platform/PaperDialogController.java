@@ -145,6 +145,7 @@ final class PaperDialogController implements Listener {
         forget(event.getPlayer(), false);
     }
 
+    /** Removes only the departing connection, optionally closing a window still owned by AuthMe. */
     private void forget(Player player, boolean closeWindow) {
         Session session = sessions.get(player.getUniqueId());
         if (session != null && session.owner == player) {
@@ -157,6 +158,7 @@ final class PaperDialogController implements Listener {
         }
     }
 
+    /** Closes the UI only if its window was not already consumed by command submission. */
     private void close(Session session) {
         if (sessions.remove(session.owner.getUniqueId(), session) && session.window.getAndSet(null) != null
             && currentPlayer(session.owner)) {
@@ -164,6 +166,7 @@ final class PaperDialogController implements Listener {
         }
     }
 
+    /** Limits presentation to current, unauthenticated connections while the setting is enabled. */
     private boolean enabled(Player player) {
         return settings.getProperty(RegistrationSettings.USE_DIALOG_UI) && currentPlayer(player)
             && !playerCache.isAuthenticated(player.getName());
@@ -198,12 +201,10 @@ final class PaperDialogController implements Listener {
         session.window.set(window);
         try {
             PostJoinDialog form = form(session);
-            PaperDialogHelper.show(session.owner, form, (actor, button) -> {
-                if (actor == session.owner) {
-                    bukkitService.scheduleSyncTaskFromOptionallyAsyncTask(actor,
-                        () -> navigate(session, window, button));
-                }
-            });
+            // Resolve the session when clicked so unused callbacks do not retain a disconnected Player.
+            PaperDialogHelper.show(session.owner, form, (actor, button) ->
+                bukkitService.scheduleSyncTaskFromOptionallyAsyncTask(actor,
+                    () -> navigate(actor, window, button)));
         } catch (RuntimeException | LinkageError e) {
             sessions.remove(session.owner.getUniqueId(), session);
             session.window.set(null);
@@ -212,8 +213,9 @@ final class PaperDialogController implements Listener {
     }
 
     /** Consumes a navigation window once. Authentication commands are submitted by the client through Bukkit. */
-    private void navigate(Session session, Object window, PostJoinDialog.Button button) {
-        if (sessions.get(session.owner.getUniqueId()) != session || !enabled(session.owner)
+    private void navigate(Player actor, Object window, PostJoinDialog.Button button) {
+        Session session = sessions.get(actor.getUniqueId());
+        if (session == null || session.owner != actor || !enabled(actor)
             || !session.window.compareAndSet(window, null)) {
             return;
         }

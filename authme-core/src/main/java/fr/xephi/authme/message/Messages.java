@@ -103,6 +103,7 @@ public class Messages {
         });
     }
 
+    /** Mirrors delivered chat feedback without allowing presentation failures to interrupt authentication. */
     private void updateDialog(CommandSender sender, MessageKey key, String message) {
         if (sender instanceof Player player && dialogAdapter != null) {
             try {
