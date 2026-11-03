@@ -108,9 +108,9 @@ public final class RegistrationSettings implements SettingsHolder {
         newProperty("settings.preventOtherCase", true);
 
     @Comment({
-        "Show a graphical dialog UI for login/register instead of chat messages.",
-        "Requires Minecraft 1.21.6+ on Spigot, or 1.21.11+ on Paper.",
-        "On older server versions, this option is automatically ignored."})
+        "Show dialogs after joining for login/register. Chat commands remain available.",
+        "Paper/Folia also show captcha, two-factor and email recovery prompts.",
+        "Requires Minecraft 1.21.6+ on Spigot, or 1.21.11+ on Paper/Folia."})
     public static final Property<Boolean> USE_DIALOG_UI =
         newProperty("settings.registration.useDialogUi", true);
 

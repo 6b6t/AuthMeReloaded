@@ -12,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 import java.util.List;
 
@@ -23,7 +22,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 
 public class PaperPlatformAdapterTest {
@@ -54,7 +52,8 @@ public class PaperPlatformAdapterTest {
             PaperChatListener.class,
             PaperPlayerSpawnLocationListener.class,
             PaperLoginValidationListener.class,
-            PlayerOpenSignListener.class));
+            PlayerOpenSignListener.class,
+            PaperDialogController.class));
     }
 
     @Test
@@ -68,33 +67,25 @@ public class PaperPlatformAdapterTest {
     }
 
     @Test
-    public void showLoginDialogDelegatesToPaperDialogHelper() {
-        // given
+    public void showLoginDialogDelegatesToController() {
         Player player = mock(Player.class);
-
-        // when / then - PaperDialogHelper uses Paper API calls that require a running server.
-        // Use mockStatic to verify delegation without invoking the full Paper server stack.
-        try (MockedStatic<PaperDialogHelper> helperMock = mockStatic(PaperDialogHelper.class)) {
-            adapter.showLoginDialog(player);
-
-            helperMock.verify(() -> PaperDialogHelper.showLoginDialog(player));
-        }
+        PaperDialogController controller = installDialogController();
+        adapter.showLoginDialog(player);
+        verify(controller).showLogin(player);
     }
 
     @Test
-    public void showRegisterDialogDelegatesToPaperDialogHelper() {
-        // given
+    public void showRegisterDialogDelegatesToController() {
         Player player = mock(Player.class);
+        PaperDialogController controller = installDialogController();
+        adapter.showRegisterDialog(player, RegistrationType.EMAIL, RegisterSecondaryArgument.CONFIRMATION);
+        verify(controller).showRegister(player, RegistrationType.EMAIL, RegisterSecondaryArgument.CONFIRMATION);
+    }
 
-        // when / then
-        try (MockedStatic<PaperDialogHelper> helperMock = mockStatic(PaperDialogHelper.class)) {
-            adapter.showRegisterDialog(player, RegistrationType.EMAIL, RegisterSecondaryArgument.CONFIRMATION);
-
-            helperMock.verify(() -> PaperDialogHelper.showRegisterDialog(
-                eq(player),
-                eq(RegistrationType.EMAIL),
-                eq(RegisterSecondaryArgument.CONFIRMATION)));
-        }
+    private PaperDialogController installDialogController() {
+        PaperDialogController controller = mock(PaperDialogController.class);
+        adapter.setDialogController(controller);
+        return controller;
     }
 
     @Test

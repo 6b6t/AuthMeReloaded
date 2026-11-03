@@ -93,6 +93,7 @@ public class FoliaPlatformAdapter extends AbstractPaperPlatformAdapter {
             FoliaChatListener.class,
             FoliaPlayerSpawnLocationListener.class,
             PaperLoginValidationListener.class,
-            PlayerOpenSignListener.class);
+            PlayerOpenSignListener.class,
+            PaperDialogController.class);
     }
 }

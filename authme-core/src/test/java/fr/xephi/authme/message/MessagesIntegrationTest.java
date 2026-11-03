@@ -5,6 +5,7 @@ import com.google.common.io.Files;
 import fr.xephi.authme.ConsoleLogger;
 import fr.xephi.authme.ReflectionTestUtils;
 import fr.xephi.authme.TestHelper;
+import fr.xephi.authme.platform.DialogAdapter;
 import fr.xephi.authme.message.updater.MessageUpdater;
 import fr.xephi.authme.settings.Settings;
 import fr.xephi.authme.settings.properties.PluginSettings;
@@ -34,6 +35,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -79,6 +82,42 @@ class MessagesIntegrationTest {
     @AfterEach
     void removeLoggerReferences() {
         ConsoleLogger.initialize(null, null);
+    }
+
+    @Test
+    void shouldKeepChatFeedbackWhileUpdatingTheDialog() {
+        Player player = mock(Player.class);
+        given(player.getName()).willReturn("Player");
+        given(player.getDisplayName()).willReturn("Player");
+        DialogAdapter adapter = mock(DialogAdapter.class);
+        messages = new Messages(messagesFileHandler, null, null, () -> adapter);
+        String translated = messages.retrieveSingle(player, MessageKey.UNKNOWN_USER);
+
+        messages.send(player, MessageKey.UNKNOWN_USER);
+
+        for (String line : translated.split("\n")) {
+            verify(player).sendMessage(line);
+        }
+        verify(adapter).onAuthMessage(player, MessageKey.UNKNOWN_USER, translated);
+    }
+
+    @Test
+    void shouldKeepChatFeedbackWhenDialogUpdatesFail() {
+        TestHelper.setupLogger();
+        Player player = mock(Player.class);
+        given(player.getName()).willReturn("Player");
+        given(player.getDisplayName()).willReturn("Player");
+        DialogAdapter adapter = mock(DialogAdapter.class);
+        messages = new Messages(messagesFileHandler, null, null, () -> adapter);
+        String translated = messages.retrieveSingle(player, MessageKey.UNKNOWN_USER);
+        doThrow(new IllegalStateException("Renderer unavailable")).when(adapter)
+            .onAuthMessage(player, MessageKey.UNKNOWN_USER, translated);
+
+        assertDoesNotThrow(() -> messages.send(player, MessageKey.UNKNOWN_USER));
+
+        for (String line : translated.split("\n")) {
+            verify(player).sendMessage(line);
+        }
     }
 
     @Test

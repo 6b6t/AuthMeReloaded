@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import fr.xephi.authme.ConsoleLogger;
 import fr.xephi.authme.output.ConsoleLoggerFactory;
 import fr.xephi.authme.mail.EmailService;
+import fr.xephi.authme.platform.DialogAdapter;
 import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.settings.Settings;
 import fr.xephi.authme.settings.properties.PluginSettings;
@@ -13,6 +14,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -48,18 +50,22 @@ public class Messages {
     private final MessagesFileHandler messagesFileHandler;
     private final Settings settings;
 
+    private final Provider<DialogAdapter> dialogAdapter;
+
     /*
      * Constructor.
      */
     @Inject
-    Messages(MessagesFileHandler messagesFileHandler, BukkitService bukkitService, Settings settings) {
+    Messages(MessagesFileHandler messagesFileHandler, BukkitService bukkitService, Settings settings,
+             Provider<DialogAdapter> dialogAdapter) {
         this.messagesFileHandler = messagesFileHandler;
         this.bukkitService = bukkitService;
         this.settings = settings;
+        this.dialogAdapter = dialogAdapter;
     }
 
     Messages(MessagesFileHandler messagesFileHandler) {
-        this(messagesFileHandler, null, null);
+        this(messagesFileHandler, null, null, null);
     }
 
     /**
@@ -74,6 +80,7 @@ public class Messages {
             for (String line : lines) {
                 sender.sendMessage(line);
             }
+            updateDialog(sender, key, String.join("\n", lines));
         });
     }
 
@@ -92,7 +99,18 @@ public class Messages {
             for (String line : message.split("\n")) {
                 sender.sendMessage(line);
             }
+            updateDialog(sender, key, message);
         });
+    }
+
+    private void updateDialog(CommandSender sender, MessageKey key, String message) {
+        if (sender instanceof Player player && dialogAdapter != null) {
+            try {
+                dialogAdapter.get().onAuthMessage(player, key, message);
+            } catch (RuntimeException | LinkageError e) {
+                logger.warning("Could not update an authentication dialog. Chat commands remain available.");
+            }
+        }
     }
 
     /**

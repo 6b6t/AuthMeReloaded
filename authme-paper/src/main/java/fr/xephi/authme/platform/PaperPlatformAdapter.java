@@ -51,6 +51,7 @@ public class PaperPlatformAdapter extends AbstractPaperPlatformAdapter {
             PaperChatListener.class,
             PaperPlayerSpawnLocationListener.class,
             PaperLoginValidationListener.class,
-            PlayerOpenSignListener.class);
+            PlayerOpenSignListener.class,
+            PaperDialogController.class);
     }
 }

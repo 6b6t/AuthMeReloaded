@@ -1,86 +1,73 @@
 package fr.xephi.authme.platform;
 
-import fr.xephi.authme.process.register.RegisterSecondaryArgument;
-import fr.xephi.authme.process.register.RegistrationType;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
-import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
+import java.time.Duration;
 import java.util.List;
 
-/**
- * Encapsulates the Paper-derived dialog API calls used by Paper and Folia.
- */
+/** Renders post-join forms without validating credentials or granting authentication. */
 final class PaperDialogHelper {
+
+    private static final LegacyComponentSerializer TEXT = LegacyComponentSerializer.legacySection();
 
     private PaperDialogHelper() {
     }
 
-    static void showLoginDialog(Player player) {
-        DialogInput passwordInput = DialogInput.text("password", Component.text("Password"))
-            .maxLength(100)
-            .build();
-
-        DialogBase base = DialogBase.builder(Component.text("Login"))
-            .inputs(List.of(passwordInput))
+    /** Shows a form with short-lived, single-use callbacks bound to its current window. */
+    static void show(Player player, PostJoinDialog form, NavigationHandler submit) {
+        List<DialogInput> inputs = form.fields().stream()
+            .map(field -> (DialogInput) DialogInput.text(field.key(), TEXT.deserialize(field.label()))
+                .maxLength(field.maxLength()).build())
+            .toList();
+        List<ActionButton> buttons = form.buttons().stream()
+            .map(button -> button(player, form, button, submit))
+            .toList();
+        PostJoinDialog.Button exit = new PostJoinDialog.Button(form.closeLabel(), PostJoinDialog.Screen.CHAT, List.of());
+        DialogBase base = DialogBase.builder(TEXT.deserialize(form.title()))
+            .body(List.of(DialogBody.plainMessage(TEXT.deserialize(form.description()))))
+            .inputs(inputs)
+            .canCloseWithEscape(true)
             .afterAction(DialogBase.DialogAfterAction.CLOSE)
             .build();
-
-        ActionButton loginButton = ActionButton.builder(Component.text("Login"))
-            .action(DialogAction.commandTemplate("login $(password)"))
-            .build();
-
-        Dialog dialog = Dialog.create(factory -> factory.empty()
-            .base(base)
-            .type(DialogType.multiAction(List.of(loginButton)).build()));
-
-        player.showDialog(dialog);
+        player.showDialog(Dialog.create(factory -> factory.empty().base(base)
+            .type(DialogType.multiAction(buttons).columns(1).exitAction(button(player, form, exit, submit)).build())));
     }
 
-    static void showRegisterDialog(Player player, RegistrationType type, RegisterSecondaryArgument secondArg) {
-        List<DialogInput> inputs = new ArrayList<>();
-        String template;
-
-        if (type == RegistrationType.EMAIL) {
-            inputs.add(DialogInput.text("email", Component.text("Email")).maxLength(100).build());
-            if (secondArg == RegisterSecondaryArgument.CONFIRMATION) {
-                inputs.add(DialogInput.text("confirm", Component.text("Confirm Email")).maxLength(100).build());
-                template = "register $(email) $(confirm)";
-            } else {
-                template = "register $(email)";
-            }
+    private static ActionButton button(Player player, PostJoinDialog form, PostJoinDialog.Button button,
+                                       NavigationHandler navigate) {
+        DialogAction action;
+        if (button.target() == null) {
+            action = DialogAction.commandTemplate(commandTemplate(form, button));
         } else {
-            inputs.add(DialogInput.text("password", Component.text("Password")).maxLength(100).build());
-            if (secondArg == RegisterSecondaryArgument.CONFIRMATION) {
-                inputs.add(DialogInput.text("confirm", Component.text("Confirm Password")).maxLength(100).build());
-                template = "register $(password) $(confirm)";
-            } else if (secondArg == RegisterSecondaryArgument.EMAIL_MANDATORY) {
-                inputs.add(DialogInput.text("email", Component.text("Email")).maxLength(100).build());
-                template = "register $(password) $(email)";
-            } else {
-                template = "register $(password)";
-            }
+            action = DialogAction.customClick((view, audience) -> {
+                if (audience instanceof Player actor && actor == player) {
+                    navigate.accept(actor, button);
+                }
+            }, ClickCallback.Options.builder().uses(1).lifetime(Duration.ofMinutes(2)).build());
         }
+        return ActionButton.builder(TEXT.deserialize(button.label())).action(action).build();
+    }
 
-        DialogBase base = DialogBase.builder(Component.text("Register"))
-            .inputs(inputs)
-            .afterAction(DialogBase.DialogAfterAction.CLOSE)
-            .build();
+    /** Builds a fixed command template. Only native input placeholders reach the normal command pipeline. */
+    static String commandTemplate(PostJoinDialog form, PostJoinDialog.Button button) {
+        StringBuilder command = new StringBuilder(String.join(" ", button.command()));
+        for (PostJoinDialog.Field field : form.fields()) {
+            command.append(" $(").append(field.key()).append(')');
+        }
+        return command.toString();
+    }
 
-        ActionButton registerButton = ActionButton.builder(Component.text("Register"))
-            .action(DialogAction.commandTemplate(template))
-            .build();
-
-        Dialog dialog = Dialog.create(factory -> factory.empty()
-            .base(base)
-            .type(DialogType.multiAction(List.of(registerButton)).build()));
-
-        player.showDialog(dialog);
+    @FunctionalInterface
+    interface NavigationHandler {
+        void accept(Player player, PostJoinDialog.Button button);
     }
 }
