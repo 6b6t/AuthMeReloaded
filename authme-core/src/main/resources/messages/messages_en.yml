@@ -83,6 +83,8 @@ on_join_validation:
 
 # Email
 email:
+  registration_limit: '&cNew registrations with this email provider are temporarily limited. Try another provider or try again later.'
+  registration_unavailable: '&cRegistration with this email provider is temporarily unavailable. Please try again later.'
   usage_email_add: '&cUsage: /email add <email> <confirmEmail>'
   usage_email_change: '&cUsage: /email change <oldEmail> <newEmail>'
   new_email_invalid: '&cInvalid new email, try again!'

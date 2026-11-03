@@ -73,6 +73,36 @@ public final class EmailSettings implements SettingsHolder {
     public static final Property<List<String>> DOMAIN_WHITELIST =
         newListProperty("Email.emailWhitelisted");
 
+    @Comment({"Limit new registrations from email domains outside trustedDomains over a rolling 24 hours.",
+              "Counters persist in the AuthMe data folder. Separate data folders have separate limits.",
+              "Existing email validation, account limits and recovery rules still apply."})
+    public static final Property<Boolean> REGISTRATION_LIMITS_ENABLED =
+        newProperty("Email.registrationLimits.enabled", true);
+
+    @Comment({"Exact email domains exempt from these daily limits. Subdomains are not exempt.",
+              "This list does not prove that an account is safe or override disposable-domain checks.",
+              "Add a work, school or custom domain here to exempt it. Wildcards are not supported."})
+    public static final Property<List<String>> REGISTRATION_TRUSTED_DOMAINS =
+        newListProperty("Email.registrationLimits.trustedDomains",
+            "gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com", "msn.com",
+            "yahoo.com", "yahoo.co.uk", "yahoo.de", "yahoo.fr", "yahoo.ca", "yahoo.co.jp",
+            "ymail.com", "rocketmail.com", "icloud.com", "me.com", "mac.com",
+            "proton.me", "protonmail.com", "pm.me", "aol.com", "gmx.com", "gmx.de", "gmx.net",
+            "web.de", "fastmail.com", "mail.com", "yandex.com", "yandex.ru", "ya.ru", "qq.com", "163.com");
+
+    @Comment({"Maximum admitted registrations per untrusted domain in 24 hours.",
+              "Set to 0 to disable this limit.",
+              "Subdomains share the limit of their registrable parent domain.",
+              "Each admitted attempt consumes a slot, even if account storage or email delivery fails."})
+    public static final Property<Integer> REGISTRATION_MAX_PER_DOMAIN =
+        newProperty("Email.registrationLimits.maxPerDomain", 10);
+
+    @Comment({"Maximum admitted registrations across all untrusted domains in 24 hours.",
+              "This limit prevents domain rotation from exhausting the email quota.",
+              "Set to 0 to disable this limit."})
+    public static final Property<Integer> REGISTRATION_MAX_UNTRUSTED_TOTAL =
+        newProperty("Email.registrationLimits.maxUntrustedTotal", 30);
+
     @Comment("Send the new password drawn in an image?")
     public static final Property<Boolean> PASSWORD_AS_IMAGE =
         newProperty("Email.generateImage", false);

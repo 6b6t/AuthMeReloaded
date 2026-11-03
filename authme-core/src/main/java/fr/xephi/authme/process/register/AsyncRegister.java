@@ -43,6 +43,8 @@ public class AsyncRegister implements AsynchronousProcess {
     @Inject
     private ValidationService validationService;
     @Inject
+    private EmailRegistrationLimiter emailRegistrationLimiter;
+    @Inject
     private SingletonStore<RegistrationExecutor> registrationExecutorFactory;
 
     AsyncRegister() {
@@ -123,6 +125,12 @@ public class AsyncRegister implements AsynchronousProcess {
     private <P extends RegistrationParameters>
     void executeRegistration(P parameters, RegistrationExecutor<P> executor) {
         PlayerAuth auth = executor.buildPlayerAuth(parameters);
+        EmailRegistrationLimiter.Admission admission = emailRegistrationLimiter.tryAcquire(auth.getEmail());
+        if (admission != EmailRegistrationLimiter.Admission.ALLOWED) {
+            service.send(parameters.getPlayer(), admission == EmailRegistrationLimiter.Admission.LIMIT_REACHED
+                ? MessageKey.EMAIL_REGISTRATION_LIMIT : MessageKey.EMAIL_REGISTRATION_UNAVAILABLE);
+            return;
+        }
         if (database.saveAuth(auth)) {
             executor.executePostPersistAction(parameters);
         } else {

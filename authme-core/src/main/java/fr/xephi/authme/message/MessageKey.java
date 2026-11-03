@@ -260,6 +260,12 @@ public enum MessageKey {
     /** The email could not be sent. Please contact an administrator. */
     EMAIL_SEND_FAILURE("email.send_failure"),
 
+    /** New registrations from this email provider have reached their daily limit. */
+    EMAIL_REGISTRATION_LIMIT("email.registration_limit"),
+
+    /** Email registration limits cannot be checked safely. */
+    EMAIL_REGISTRATION_UNAVAILABLE("email.registration_unavailable"),
+
     /** A recovery code to reset your password has been sent to your email. */
     RECOVERY_CODE_SENT("recovery.code.code_sent"),
 
