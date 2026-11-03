@@ -14,7 +14,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -50,14 +49,14 @@ public class Messages {
     private final MessagesFileHandler messagesFileHandler;
     private final Settings settings;
 
-    private final Provider<DialogAdapter> dialogAdapter;
+    private final DialogAdapter dialogAdapter;
 
     /*
      * Constructor.
      */
     @Inject
     Messages(MessagesFileHandler messagesFileHandler, BukkitService bukkitService, Settings settings,
-             Provider<DialogAdapter> dialogAdapter) {
+             DialogAdapter dialogAdapter) {
         this.messagesFileHandler = messagesFileHandler;
         this.bukkitService = bukkitService;
         this.settings = settings;
@@ -107,7 +106,7 @@ public class Messages {
     private void updateDialog(CommandSender sender, MessageKey key, String message) {
         if (sender instanceof Player player && dialogAdapter != null) {
             try {
-                dialogAdapter.get().onAuthMessage(player, key, message);
+                dialogAdapter.onAuthMessage(player, key, message);
             } catch (RuntimeException | LinkageError e) {
                 logger.warning("Could not update an authentication dialog. Chat commands remain available.");
             }

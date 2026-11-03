@@ -1,5 +1,7 @@
 package fr.xephi.authme.message;
 
+import ch.jalu.injector.Injector;
+import ch.jalu.injector.InjectorBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import fr.xephi.authme.ConsoleLogger;
@@ -7,6 +9,7 @@ import fr.xephi.authme.ReflectionTestUtils;
 import fr.xephi.authme.TestHelper;
 import fr.xephi.authme.platform.DialogAdapter;
 import fr.xephi.authme.message.updater.MessageUpdater;
+import fr.xephi.authme.service.BukkitService;
 import fr.xephi.authme.settings.Settings;
 import fr.xephi.authme.settings.properties.PluginSettings;
 import fr.xephi.authme.util.FileUtils;
@@ -32,9 +35,11 @@ import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.never;
@@ -84,6 +89,41 @@ class MessagesIntegrationTest {
         ConsoleLogger.initialize(null, null);
     }
 
+    /** Resolves the registered adapter through the same injector used by the running plugin. */
+    @Test
+    void shouldResolveRegisteredDialogAdapterWithRealInjector() {
+        TestHelper.setupLogger();
+        Injector injector = new InjectorBuilder().addDefaultHandlers("fr.xephi.authme").create();
+        DialogAdapter adapter = mock(DialogAdapter.class);
+        BukkitService scheduler = mock(BukkitService.class);
+        Settings settings = mock(Settings.class);
+        given(settings.getProperty(PluginSettings.PER_PLAYER_LOCALE)).willReturn(false);
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(1)).run();
+            return null;
+        }).when(scheduler).scheduleSyncTaskFromOptionallyAsyncTask(any(Player.class), any(Runnable.class));
+        injector.register(DialogAdapter.class, adapter);
+        injector.register(MessagesFileHandler.class, messagesFileHandler);
+        injector.register(BukkitService.class, scheduler);
+        injector.register(Settings.class, settings);
+        messages = injector.getSingleton(Messages.class);
+        Player player = mock(Player.class);
+        given(player.getName()).willReturn("Player");
+        given(player.getDisplayName()).willReturn("Player");
+        String translated = messages.retrieveSingle(player, MessageKey.UNKNOWN_USER);
+
+        messages.send(player, MessageKey.UNKNOWN_USER);
+        messages.send(player, MessageKey.CAPTCHA_WRONG_ERROR, "1234");
+
+        for (String line : translated.split("\n")) {
+            verify(player).sendMessage(line);
+        }
+        verify(player).sendMessage("Use /captcha 1234 to solve the captcha");
+        verify(adapter).onAuthMessage(player, MessageKey.UNKNOWN_USER, translated);
+        verify(adapter).onAuthMessage(player, MessageKey.CAPTCHA_WRONG_ERROR,
+            "Use /captcha 1234 to solve the captcha");
+    }
+
     /** Preserves every chat line while forwarding the same translated feedback to the dialog. */
     @Test
     void shouldKeepChatFeedbackWhileUpdatingTheDialog() {
@@ -91,7 +131,7 @@ class MessagesIntegrationTest {
         given(player.getName()).willReturn("Player");
         given(player.getDisplayName()).willReturn("Player");
         DialogAdapter adapter = mock(DialogAdapter.class);
-        messages = new Messages(messagesFileHandler, null, null, () -> adapter);
+        messages = new Messages(messagesFileHandler, null, null, adapter);
         String translated = messages.retrieveSingle(player, MessageKey.UNKNOWN_USER);
 
         messages.send(player, MessageKey.UNKNOWN_USER);
@@ -110,7 +150,7 @@ class MessagesIntegrationTest {
         given(player.getName()).willReturn("Player");
         given(player.getDisplayName()).willReturn("Player");
         DialogAdapter adapter = mock(DialogAdapter.class);
-        messages = new Messages(messagesFileHandler, null, null, () -> adapter);
+        messages = new Messages(messagesFileHandler, null, null, adapter);
         String translated = messages.retrieveSingle(player, MessageKey.UNKNOWN_USER);
         doThrow(new IllegalStateException("Renderer unavailable")).when(adapter)
             .onAuthMessage(player, MessageKey.UNKNOWN_USER, translated);
