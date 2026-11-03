@@ -49,6 +49,15 @@ class EmailRegistrationLimiter {
         this.logger = logger;
     }
 
+    /**
+     * Reserves a slot for an untrusted domain before the caller saves an account or sends mail.
+     * Trusted domains and registrations without an email do not consume slots. Reservations
+     * remain counted if a later registration step fails. Storage or configuration errors reject
+     * untrusted registrations without clearing the saved counters.
+     *
+     * @param email the registration email address
+     * @return whether a slot was reserved, a limit was reached, or the counters were unavailable
+     */
     synchronized Admission tryAcquire(String email) {
         if (!settings.getProperty(EmailSettings.REGISTRATION_LIMITS_ENABLED) || Utils.isEmailEmpty(email)) {
             return Admission.ALLOWED;
@@ -100,6 +109,13 @@ class EmailRegistrationLimiter {
         }
     }
 
+    /**
+     * Converts an exact domain to lowercase ASCII for provider matching and persistent storage.
+     *
+     * @param domain the configured or requested email domain
+     * @return its ASCII form
+     * @throws IllegalArgumentException if the domain has no registrable part or ends with a dot
+     */
     private static String normalizeDomain(String domain) {
         String normalized = IDN.toASCII(domain, IDN.USE_STD3_ASCII_RULES).toLowerCase(Locale.ROOT);
         InternetDomainName parsed = InternetDomainName.from(normalized);
@@ -109,6 +125,16 @@ class EmailRegistrationLimiter {
         return normalized;
     }
 
+    /**
+     * Reads validated reservations newer than the rolling cutoff. A missing file starts empty,
+     * while malformed or oversized state raises an error instead of resetting the counters.
+     *
+     * @param path the persistent state file
+     * @param cutoff the exclusive lower timestamp bound in milliseconds
+     * @return reservations that still consume daily slots
+     * @throws IOException if the file cannot be read or its contents are invalid
+     * @throws IllegalArgumentException if a timestamp or domain cannot be parsed
+     */
     private static List<Entry> readEntries(Path path, long cutoff) throws IOException {
         List<Entry> entries = new ArrayList<>();
         if (!Files.exists(path)) {
@@ -134,6 +160,14 @@ class EmailRegistrationLimiter {
         return entries;
     }
 
+    /**
+     * Flushes reservations to a temporary file, then replaces the state file atomically.
+     * The caller holds the separate lock file throughout the read and replacement operation.
+     *
+     * @param statePath the persistent state file
+     * @param entries the reservations to retain
+     * @throws IOException if the state is too large or cannot be saved atomically
+     */
     private static void writeEntries(Path statePath, List<Entry> entries) throws IOException {
         StringBuilder state = new StringBuilder();
         for (Entry entry : entries) {

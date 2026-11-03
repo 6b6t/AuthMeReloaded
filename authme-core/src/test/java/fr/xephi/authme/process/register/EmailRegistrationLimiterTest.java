@@ -59,6 +59,7 @@ class EmailRegistrationLimiterTest {
         limiter = newLimiter();
     }
 
+    /** Verifies that changing the mailbox does not bypass a domain's registration limit. */
     @Test
     void shouldLimitOneDomainAcrossDifferentMailboxes() {
         for (int i = 0; i < 10; ++i) {
@@ -68,6 +69,7 @@ class EmailRegistrationLimiterTest {
         assertEquals(ALLOWED, limiter.tryAcquire("player@example.net"));
     }
 
+    /** Verifies that the combined budget still applies when every registration uses a new domain. */
     @Test
     void shouldLimitRotationAcrossDomains() {
         for (int i = 0; i < 30; ++i) {
@@ -77,6 +79,7 @@ class EmailRegistrationLimiterTest {
         assertEquals(ALLOWED, limiter.tryAcquire("player@gmail.com"));
     }
 
+    /** Verifies that trusted domains consume no slots and do not exempt subdomains or lookalikes. */
     @Test
     void shouldMatchTrustedDomainsExactlyWithoutConsumingSlots() throws Exception {
         when(settings.getProperty(EmailSettings.REGISTRATION_TRUSTED_DOMAINS)).thenReturn(List.of("GMAIL.COM"));
@@ -127,6 +130,7 @@ class EmailRegistrationLimiterTest {
         assertEquals(LIMIT_REACHED, newLimiter().tryAcquire("second@example.com"));
     }
 
+    /** Verifies that simultaneous requests cannot exceed either the domain or combined budget. */
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void shouldSerializeConcurrentReservations(boolean rotateDomains) throws Exception {
@@ -179,6 +183,7 @@ class EmailRegistrationLimiterTest {
         assertEquals(ALLOWED, limiter.tryAcquire("player@gmail.com"));
     }
 
+    /** Verifies that malformed state cannot reset or bypass the saved registration counters. */
     @Test
     void shouldRejectMalformedStateRows() throws Exception {
         for (String malformed : List.of("123\n", "-1\texample.com\n", "123\tcom\n",
@@ -240,6 +245,7 @@ class EmailRegistrationLimiterTest {
         assertEquals(LIMIT_REACHED, limiter.tryAcquire("third@example.com"));
     }
 
+    /** Verifies that invalid limits and domain values reject admission without creating state. */
     @Test
     void shouldRejectInvalidConfigurationAndDomains() {
         when(settings.getProperty(EmailSettings.REGISTRATION_MAX_PER_DOMAIN)).thenReturn(-1);
