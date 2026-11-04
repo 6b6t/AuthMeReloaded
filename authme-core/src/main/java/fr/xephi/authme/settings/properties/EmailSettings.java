@@ -49,9 +49,29 @@ public final class EmailSettings implements SettingsHolder {
     public static final Property<Integer> RECOVERY_PASSWORD_LENGTH =
         newProperty("Email.RecoveryPasswordLength", 8);
 
-    @Comment("Mail Subject")
+    @Comment("Fallback subject when an email kind's subject is empty")
     public static final Property<String> RECOVERY_MAIL_SUBJECT =
         newProperty("Email.mailSubject", "Your new AuthMe password");
+
+    @Comment({"Subject for new account emails. Supports <servername /> and <playername />.",
+              "Leave empty to use mailSubject."})
+    public static final Property<String> REGISTRATION_MAIL_SUBJECT =
+        newProperty("Email.subjects.registration", "Welcome to <servername />");
+
+    @Comment({"Subject for emails containing a replacement password.",
+              "Supports <servername /> and <playername />. Leave empty to use mailSubject."})
+    public static final Property<String> PASSWORD_MAIL_SUBJECT =
+        newProperty("Email.subjects.passwordReset", "Your new <servername /> password");
+
+    @Comment({"Subject for password recovery code emails.",
+              "Supports <servername /> and <playername />. Leave empty to use mailSubject."})
+    public static final Property<String> RECOVERY_CODE_MAIL_SUBJECT =
+        newProperty("Email.subjects.recoveryCode", "Reset your <servername /> password");
+
+    @Comment({"Subject for sensitive command verification emails.",
+              "Supports <servername /> and <playername />. Leave empty to use mailSubject."})
+    public static final Property<String> VERIFICATION_MAIL_SUBJECT =
+        newProperty("Email.subjects.verification", "Verify your <servername /> account");
 
     @Comment("Like maxRegPerIP but with email")
     public static final Property<Integer> MAX_REG_PER_EMAIL =

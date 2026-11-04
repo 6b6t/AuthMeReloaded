@@ -80,6 +80,19 @@ Keep that file and its `.lock` file in the persistent data directory. Separate d
 If AuthMe cannot read or save the counters, it rejects registrations from untrusted domains until storage works again.
 These limits apply to player registrations with email addresses. They do not limit existing-account recovery or email changes.
 
+Email subjects are configured separately under `Email.subjects`: `registration`, `passwordReset`,
+`recoveryCode`, and `verification`. Each subject supports `<servername />` and `<playername />`.
+If a subject is empty, AuthMe uses the existing `Email.mailSubject` value.
+
+Email templates are stored in `plugins/AuthMe/`. New accounts use `registration_email.html`.
+Replacement passwords use `email.html`. Recovery and verification codes use `recovery_code_email.html`
+and `verification_code_email.html`. Each template explains the action and the command to enter in Minecraft.
+
+AuthMe copies missing templates from the plugin JAR and preserves existing files during upgrades and reloads.
+Existing installations must replace their template files to adopt the new designs.
+Back up custom templates before replacing them with the reviewed files from `authme-core/src/main/resources/`.
+Reload AuthMe after editing subjects or templates.
+
 Paper/Folia dialogs use the existing `settings.registration.useDialogUi` option, which defaults to `true`.
 They open after the player joins and cover login, registration, captcha, two-factor codes, and email recovery.
 Every submission runs the normal auth command with the existing security checks and registration limits.

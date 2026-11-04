@@ -130,7 +130,7 @@ public class EmailRegisterExecutorTest {
     @Test
     public void shouldPerformActionAfterDataSourceSave() {
         // given
-        given(emailService.sendPasswordMail(anyString(), anyString(), anyString())).willReturn(true);
+        given(emailService.sendRegistrationMail(anyString(), anyString(), anyString())).willReturn(true);
         Player player = mock(Player.class);
         given(player.getName()).willReturn("Laleh");
         EmailRegisterParams params = EmailRegisterParams.of(player, "test@example.com");
@@ -141,14 +141,14 @@ public class EmailRegisterExecutorTest {
         executor.executePostPersistAction(params);
 
         // then
-        verify(emailService).sendPasswordMail("Laleh", "test@example.com", password);
+        verify(emailService).sendRegistrationMail("Laleh", "test@example.com", password);
         verify(syncProcessManager).processSyncEmailRegister(player);
     }
 
     @Test
     public void shouldHandleEmailSendingFailure() {
         // given
-        given(emailService.sendPasswordMail(anyString(), anyString(), anyString())).willReturn(false);
+        given(emailService.sendRegistrationMail(anyString(), anyString(), anyString())).willReturn(false);
         Player player = mock(Player.class);
         given(player.getName()).willReturn("Laleh");
         EmailRegisterParams params = EmailRegisterParams.of(player, "test@example.com");
@@ -159,7 +159,7 @@ public class EmailRegisterExecutorTest {
         executor.executePostPersistAction(params);
 
         // then
-        verify(emailService).sendPasswordMail("Laleh", "test@example.com", password);
+        verify(emailService).sendRegistrationMail("Laleh", "test@example.com", password);
         verify(commonService).send(player, MessageKey.EMAIL_SEND_FAILURE);
         verifyNoInteractions(syncProcessManager);
     }

@@ -67,6 +67,7 @@ class EmailServiceTest {
     @Test
     void shouldSendPasswordMail() throws EmailException {
         // given
+        given(settings.getProperty(EmailSettings.PASSWORD_MAIL_SUBJECT)).willReturn("Your new password");
         given(settings.getPasswordEmailMessage())
             .willReturn("Hi <playername />, your new password for <servername /> is <generatedpass />");
         given(settings.getProperty(EmailSettings.PASSWORD_AS_IMAGE)).willReturn(false);
@@ -106,6 +107,7 @@ class EmailServiceTest {
     @Test
     void shouldHandleMailSendingFailure() throws EmailException {
         // given
+        given(settings.getProperty(EmailSettings.PASSWORD_MAIL_SUBJECT)).willReturn("Your new password");
         given(sendMailSsl.hasAllInformation()).willReturn(true);
         given(settings.getPasswordEmailMessage()).willReturn("Hi <playername />, your new pass is <generatedpass />");
         given(settings.getProperty(EmailSettings.PASSWORD_AS_IMAGE)).willReturn(false);
@@ -128,6 +130,7 @@ class EmailServiceTest {
     @Test
     void shouldSendRecoveryCode() throws EmailException {
         // given
+        given(settings.getProperty(EmailSettings.RECOVERY_CODE_MAIL_SUBJECT)).willReturn("Your recovery code");
         given(settings.getProperty(SecuritySettings.RECOVERY_CODE_HOURS_VALID)).willReturn(7);
         given(settings.getProperty(PluginSettings.SERVER_NAME)).willReturn("serverName");
         given(settings.getRecoveryCodeEmailMessage())
@@ -164,6 +167,7 @@ class EmailServiceTest {
     @Test
     void shouldHandleFailureToSendRecoveryCode() throws EmailException {
         // given
+        given(settings.getProperty(EmailSettings.RECOVERY_CODE_MAIL_SUBJECT)).willReturn("Your recovery code");
         given(settings.getProperty(SecuritySettings.RECOVERY_CODE_HOURS_VALID)).willReturn(7);
         given(settings.getProperty(PluginSettings.SERVER_NAME)).willReturn("Server? I barely know her!");
         given(settings.getRecoveryCodeEmailMessage()).willReturn("Hi <playername />, your code is <recoverycode /> for <servername />");

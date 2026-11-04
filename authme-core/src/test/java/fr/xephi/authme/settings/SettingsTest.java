@@ -13,6 +13,7 @@ import fr.xephi.authme.TempFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
 
@@ -95,6 +96,34 @@ public class SettingsTest {
 
         // then
         assertThat(result, equalTo(emailMessage));
+    }
+
+    @Test
+    public void shouldPreserveAndReloadCustomRegistrationTemplate() throws IOException {
+        File registrationFile = new File(testPluginFolder, "registration_email.html");
+        File passwordFile = new File(testPluginFolder, "email.html");
+        Files.writeString(registrationFile.toPath(), "Custom welcome for <playername />", StandardCharsets.UTF_8);
+        Files.writeString(passwordFile.toPath(), "Custom password reset", StandardCharsets.UTF_8);
+        Settings settings = new Settings(testPluginFolder, mockPropertyResourceAndReader(), null, CONFIG_DATA);
+
+        assertThat(settings.getRegistrationEmailMessage(), equalTo("Custom welcome for <playername />"));
+        assertThat(settings.getPasswordEmailMessage(), equalTo("Custom password reset"));
+
+        Files.writeString(registrationFile.toPath(), "Updated welcome", StandardCharsets.UTF_8);
+        settings.reload();
+
+        assertThat(settings.getRegistrationEmailMessage(), equalTo("Updated welcome"));
+        assertThat(settings.getPasswordEmailMessage(), equalTo("Custom password reset"));
+    }
+
+    @Test
+    public void shouldCopyBundledRegistrationTemplateWhenMissing() throws IOException {
+        Settings settings = new Settings(testPluginFolder, mockPropertyResourceAndReader(), null, CONFIG_DATA);
+        String bundled = Files.readString(TestHelper.getJarFile("/registration_email.html").toPath(),
+            StandardCharsets.UTF_8);
+
+        assertThat(settings.getRegistrationEmailMessage(), equalTo(bundled));
+        assertThat(Files.readString(new File(testPluginFolder, "registration_email.html").toPath()), equalTo(bundled));
     }
 
     private static PropertyResource mockPropertyResourceAndReader() {

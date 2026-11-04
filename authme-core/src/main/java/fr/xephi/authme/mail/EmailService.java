@@ -1,5 +1,7 @@
 package fr.xephi.authme.mail;
 
+import ch.jalu.configme.properties.Property;
+import com.google.common.html.HtmlEscapers;
 import fr.xephi.authme.ConsoleLogger;
 import fr.xephi.authme.initialization.DataFolder;
 import fr.xephi.authme.output.ConsoleLoggerFactory;
@@ -8,6 +10,7 @@ import fr.xephi.authme.settings.properties.EmailSettings;
 import fr.xephi.authme.settings.properties.PluginSettings;
 import fr.xephi.authme.settings.properties.SecuritySettings;
 import fr.xephi.authme.util.FileUtils;
+import fr.xephi.authme.util.StringUtils;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 
@@ -50,20 +53,39 @@ public class EmailService {
      * @return true if email could be sent, false otherwise
      */
     public boolean sendPasswordMail(String name, String mailAddress, String newPass) {
+        return sendPasswordMail(name, mailAddress, newPass, settings.getPasswordEmailMessage(),
+            EmailSettings.PASSWORD_MAIL_SUBJECT);
+    }
+
+    /**
+     * Sends the generated password for a new account with the registration template and subject.
+     *
+     * @param name the name of the player
+     * @param mailAddress the player's email address
+     * @param newPass the generated password
+     * @return true if the email was sent
+     */
+    public boolean sendRegistrationMail(String name, String mailAddress, String newPass) {
+        return sendPasswordMail(name, mailAddress, newPass, settings.getRegistrationEmailMessage(),
+            EmailSettings.REGISTRATION_MAIL_SUBJECT);
+    }
+
+    private boolean sendPasswordMail(String name, String mailAddress, String newPass, String template,
+                                    Property<String> subjectProperty) {
         if (!hasAllInformation()) {
-            logger.warning("Cannot perform email registration: not all email settings are complete");
+            logger.warning("Cannot send password email: not all email settings are complete");
             return false;
         }
 
         HtmlEmail email;
         try {
-            email = sendMailSsl.initializeMail(mailAddress);
+            email = initializeMail(mailAddress, name, subjectProperty);
         } catch (EmailException e) {
             logger.logException("Failed to create email with the given settings:", e);
             return false;
         }
 
-        String mailText = replaceTagsForPasswordMail(settings.getPasswordEmailMessage(), name, newPass);
+        String mailText = replaceTagsForPasswordMail(template, name, newPass);
         // Generate an image?
         File file = null;
         if (settings.getProperty(EmailSettings.PASSWORD_AS_IMAGE)) {
@@ -97,7 +119,7 @@ public class EmailService {
 
         HtmlEmail email;
         try {
-            email = sendMailSsl.initializeMail(mailAddress);
+            email = initializeMail(mailAddress, name, EmailSettings.VERIFICATION_MAIL_SUBJECT);
         } catch (EmailException e) {
             logger.logException("Failed to create verification email with the given settings:", e);
             return false;
@@ -119,7 +141,7 @@ public class EmailService {
     public boolean sendRecoveryCode(String name, String email, String code) {
         HtmlEmail htmlEmail;
         try {
-            htmlEmail = sendMailSsl.initializeMail(email);
+            htmlEmail = initializeMail(email, name, EmailSettings.RECOVERY_CODE_MAIL_SUBJECT);
         } catch (EmailException e) {
             logger.logException("Failed to create email for recovery code:", e);
             return false;
@@ -128,6 +150,20 @@ public class EmailService {
         String message = replaceTagsForRecoveryCodeMail(settings.getRecoveryCodeEmailMessage(),
             name, code, settings.getProperty(SecuritySettings.RECOVERY_CODE_HOURS_VALID));
         return sendMailSsl.sendEmail(message, htmlEmail);
+    }
+
+    private HtmlEmail initializeMail(String address, String name, Property<String> subjectProperty)
+        throws EmailException {
+        HtmlEmail email = sendMailSsl.initializeMail(address);
+        String subject = settings.getProperty(subjectProperty);
+        if (StringUtils.isBlank(subject)) {
+            subject = settings.getProperty(EmailSettings.RECOVERY_MAIL_SUBJECT);
+        }
+        if (!StringUtils.isBlank(subject)) {
+            email.setSubject(subject.replace("<playername />", name)
+                .replace("<servername />", settings.getProperty(PluginSettings.SERVER_NAME)));
+        }
+        return email;
     }
 
     private File generatePasswordImage(String name, String newPass) throws IOException {
@@ -146,24 +182,28 @@ public class EmailService {
 
     private String replaceTagsForPasswordMail(String mailText, String name, String newPass) {
         return mailText
-            .replace("<playername />", name)
-            .replace("<servername />", settings.getProperty(PluginSettings.SERVER_NAME))
-            .replace("<generatedpass />", newPass);
+            .replace("<playername />", escapeHtml(name))
+            .replace("<servername />", escapeHtml(settings.getProperty(PluginSettings.SERVER_NAME)))
+            .replace("<generatedpass />", escapeHtml(newPass));
     }
 
     private String replaceTagsForVerificationEmail(String mailText, String name, String code, int minutesValid) {
         return mailText
-            .replace("<playername />", name)
-            .replace("<servername />", settings.getProperty(PluginSettings.SERVER_NAME))
-            .replace("<generatedcode />", code)
+            .replace("<playername />", escapeHtml(name))
+            .replace("<servername />", escapeHtml(settings.getProperty(PluginSettings.SERVER_NAME)))
+            .replace("<generatedcode />", escapeHtml(code))
             .replace("<minutesvalid />", String.valueOf(minutesValid));
     }
 
     private String replaceTagsForRecoveryCodeMail(String mailText, String name, String code, int hoursValid) {
         return mailText
-            .replace("<playername />", name)
-            .replace("<servername />", settings.getProperty(PluginSettings.SERVER_NAME))
-            .replace("<recoverycode />", code)
+            .replace("<playername />", escapeHtml(name))
+            .replace("<servername />", escapeHtml(settings.getProperty(PluginSettings.SERVER_NAME)))
+            .replace("<recoverycode />", escapeHtml(code))
             .replace("<hoursvalid />", String.valueOf(hoursValid));
+    }
+
+    private static String escapeHtml(String value) {
+        return HtmlEscapers.htmlEscaper().escape(value);
     }
 }

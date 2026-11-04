@@ -22,6 +22,7 @@ public class Settings extends SettingsManagerImpl {
     private final ConsoleLogger logger = ConsoleLoggerFactory.get(Settings.class);
     private final File pluginFolder;
     private String passwordEmailMessage;
+    private String registrationEmailMessage;
     private String verificationEmailMessage;
     private String recoveryCodeEmailMessage;
 
@@ -41,12 +42,21 @@ public class Settings extends SettingsManagerImpl {
     }
 
     /**
-     * Return the text to use in email registrations.
+     * Return the text for emails containing a replacement password.
      *
      * @return The email message
      */
     public String getPasswordEmailMessage() {
         return passwordEmailMessage;
+    }
+
+    /**
+     * Returns the message for new account registrations.
+     *
+     * @return the registration email message
+     */
+    public String getRegistrationEmailMessage() {
+        return registrationEmailMessage;
     }
 
     /**
@@ -69,6 +79,7 @@ public class Settings extends SettingsManagerImpl {
 
     private void loadSettingsFromFiles() {
         passwordEmailMessage = readFile("email.html");
+        registrationEmailMessage = readFile("registration_email.html");
         verificationEmailMessage = readFile("verification_code_email.html");
         recoveryCodeEmailMessage = readFile("recovery_code_email.html");
     }

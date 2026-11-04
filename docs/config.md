@@ -395,8 +395,21 @@ Email:
     mailSenderName: ''
     # Recovery password length
     RecoveryPasswordLength: 8
-    # Mail Subject
+    # Fallback subject when an email kind's subject is empty
     mailSubject: Your new AuthMe password
+    subjects:
+        # Subject for new account emails. Supports <servername /> and <playername />.
+        # Leave empty to use mailSubject.
+        registration: Welcome to <servername />
+        # Subject for emails containing a replacement password.
+        # Supports <servername /> and <playername />. Leave empty to use mailSubject.
+        passwordReset: Your new <servername /> password
+        # Subject for password recovery code emails.
+        # Supports <servername /> and <playername />. Leave empty to use mailSubject.
+        recoveryCode: Reset your <servername /> password
+        # Subject for sensitive command verification emails.
+        # Supports <servername /> and <playername />. Leave empty to use mailSubject.
+        verification: Verify your <servername /> account
     # Like maxRegPerIP but with email
     maxRegPerEmail: 1
     # Recall players to add an email?
