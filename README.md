@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This repository has moved to **[git.6b6t.org/6b6t/AuthMeReloaded](https://git.6b6t.org/6b6t/AuthMeReloaded)**. This GitHub copy is archived and no longer updated.
+
 # AuthMeReloaded
 **"The best authentication plugin for the Bukkit modding API!"**
 
